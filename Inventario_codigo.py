@@ -1,16 +1,13 @@
 
 import sqlite3
 DBName = "inventario.db"
-conexion=sqlite3.connect(DBName)
-cursor=conexion.cursor()
-opcion=0
+conexion = sqlite3.connect(DBName)
+cursor = conexion.cursor()
+opcion = 0
 
-
-
-
-def mostrar_menu():               #Defino la funcion para mostrar el menu
+def mostrar_menu():  # Defino la funcion para mostrar el menu
     print("")
-    print("***Bienveido al sistema de inventario SINOTECH. Ingrese una opcion para continuar \n")
+    print("***Bienvenido al sistema de inventario SINOTECH. Ingrese una opción para continuar \n")
     print("-----MENU PRINCIPAL-----")
     print("1. Dar Alta a Nuevo producto ")
     print("2. Mostrar lista de productos")
@@ -19,23 +16,20 @@ def mostrar_menu():               #Defino la funcion para mostrar el menu
     print("5. Buscar Producto")
     print("6. Reporte de Bajo stock")
     print("7. Salir")
-    
 
 def create_table_materiales():
-        
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS materiales (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,        -- ID único para cada producto
-    nombre VARCHAR(255) NOT NULL,              -- Nombre del producto
-    descripcion TEXT,                          -- Descripción del producto
-    stock  INT NOT NULL DEFAULT 0,           -- Cantidad disponible del producto
-    precio DECIMAL(10, 2) NOT NULL,            -- Precio del producto
-    categoria VARCHAR(255)                    -- Categoría del producto
+        id INTEGER PRIMARY KEY AUTOINCREMENT,  -- ID único para cada producto
+        nombre VARCHAR(255) NOT NULL,          -- Nombre del producto
+        descripcion TEXT,                      -- Descripción del producto
+        stock INT NOT NULL DEFAULT 0,          -- Cantidad disponible del producto
+        precio DECIMAL(10, 2) NOT NULL,        -- Precio del producto
+        categoria VARCHAR(255)                 -- Categoría del producto
     )
-    """
-    )
+    """)
     conexion.commit()
-    # Cerrar la conexión
+
     
     
 
@@ -91,15 +85,50 @@ def actualizar_producto():
     #  Permite actualizar la cantidad de un producto específico.
     print("\nActualizar Producto:")
     id_producto = int(input("ID del producto a actualizar: "))
-    nueva_cantidad = int(input("Nueva cantidad disponible: "))
+    accion = input("¿Está ingresando o vendiendo producto? (ingresar/vender): ").lower()
+    if accion not in ['ingresar', 'vender']:
+        print("Acción inválida. Por favor elija 'ingresar' o 'vender'.")
+        return
+    cantidad = int(input("Cantidad a actualizar: "))
 
     conexion=sqlite3.connect(DBName)
     cursor=conexion.cursor()
-    query = "UPDATE materiales SET stock = ? WHERE id =? "
-    values = (nueva_cantidad, id_producto)
 
-    cursor.execute(query, values)
-    conexion.commit()
+    query = "SELECT stock FROM materiales WHERE id = ? "
+    cursor.execute(query, (id_producto,))
+    resultado = cursor.fetchone()
+    if resultado:
+        stock_actual = resultado[0]
+
+        if accion == 'ingresar':
+            # Sumamos la cantidad al stock
+            nuevo_stock = stock_actual + cantidad
+        elif accion == 'vender':
+             # Restamos la cantidad al stock, pero no puede ser mayor al stock disponible
+            if cantidad > stock_actual:
+                print("No hay suficiente stock para vender esa cantidad.")
+                conexion.close()
+                return
+            nuevo_stock = stock_actual - cantidad
+
+             # Actualizar el stock en la base de datos
+        query_update = "UPDATE materiales SET stock = ? WHERE id = ?"
+        cursor.execute(query_update, (nuevo_stock, id_producto))
+        conexion.commit()
+
+        print(f"\nStock del producto con ID {id_producto} actualizado exitosamente a {nuevo_stock}.")
+    else:
+        print(f"No se encontró un producto con el ID {id_producto}.")
+
+    cursor.close()
+    conexion.close()    
+
+
+          
+
+'''
+
+  """  conexion.commit()
 
     if cursor.rowcount > 0:
         print(f"\nProducto con ID {id_producto} actualizado exitosamente.")
@@ -108,7 +137,8 @@ def actualizar_producto():
 
     conexion.commit()    
     conexion.close()
-
+'''
+    
 
 def eliminar_producto():
    
@@ -135,6 +165,7 @@ def eliminar_producto():
     cursor.close()
     conexion.close()
 
+    
 def buscar_producto():
     #Permite buscar productos por ID, nombre o categoría.
 
@@ -203,7 +234,6 @@ def reporte_bajo_stock():
     cursor.close()
     conexion.close()
 
-def dato_producto():
     
     
 
@@ -228,7 +258,9 @@ while opcion != 7:
         #break # solo si usamos un while true
     else:
         print("Opción inválida. Intente nuevamente.")
-        
+  #break # solo si usamos un while true
+else:
+        print("Opción inválida. Intente nuevamente.")        
 
 
 
