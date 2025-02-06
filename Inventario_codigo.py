@@ -1,4 +1,5 @@
 
+
 import sqlite3
 DBName = "inventario.db"
 conexion = sqlite3.connect(DBName)
@@ -15,7 +16,8 @@ def mostrar_menu():  # Defino la funcion para mostrar el menu
     print("4. Dar de baja producto")
     print("5. Buscar Producto")
     print("6. Reporte de Bajo stock")
-    print("7. Salir")
+    print("7. Modificar datos del producto")
+    print("8. Salir")
 
 def create_table_materiales():
     cursor.execute("""
@@ -124,20 +126,7 @@ def actualizar_producto():
     conexion.close()    
 
 
-          
 
-'''
-
-  """  conexion.commit()
-
-    if cursor.rowcount > 0:
-        print(f"\nProducto con ID {id_producto} actualizado exitosamente.")
-    else:
-        print( f"No se encontró un producto con el ID {id_producto}.")
-
-    conexion.commit()    
-    conexion.close()
-'''
     
 
 def eliminar_producto():
@@ -213,12 +202,12 @@ def reporte_bajo_stock():
     
    # Muestra un reporte de productos con cantidad menor o igual al límite especificado por el usuario.
     
-    limite = int(input("Ingrese el límite de stock: "))
+    limite = int(input ("Ingrese el límite de stock: "))
 
     conexion=sqlite3.connect(DBName)
     cursor=conexion.cursor()
 
-    query = "SELECT * FROM materiales WHERE cantidad <= ?"
+    query = "SELECT * FROM materiales WHERE stock <= ?"
     values = (limite,)
     cursor.execute(query, values)
 
@@ -227,19 +216,74 @@ def reporte_bajo_stock():
     if materiales:
         print("\nID | Nombre | Descripción | Cantidad | Precio | Categoría")
         for producto in materiales:
-            print(f"{producto[0]} | {producto[1]} | {producto[2]} | {producto[3]} | {producto[4]} | {producto[5]}")
+            print (f"{producto[0]} | {producto[1]} | {producto[2]} | {producto[3]} | {producto[4]} | {producto[5]}")
     else:
         print("No hay productos con bajo stock.")
 
     cursor.close()
     conexion.close()
 
+
+def modificar_producto():
+    print("\nModificar Datos de Producto:")
     
+    # Pedimos al usuario el ID del producto a modificar
+    producto_id = int(input("Ingrese el ID del producto a modificar: "))
+    
+    # Pedimos al usuario los nuevos datos del producto
+    nombre = input("Nuevo nombre del producto (dejar en blanco para no modificar): ")
+    descripcion = input("Nueva descripción del producto (dejar en blanco para no modificar): ")
+    stock = input("Nueva cantidad disponible (dejar en blanco para no modificar): ")
+    precio = input("Nuevo precio del producto (dejar en blanco para no modificar): ")
+    categoria = input("Nueva categoría del producto (dejar en blanco para no modificar): ")
+
+    # Creamos la lista de valores a actualizar
+    # Usamos None como marcador para los campos que no fueron modificados
+    datos_a_actualizar = []
+    set_clause = []
+
+    if nombre != "":
+        set_clause.append("nombre = ?")
+        datos_a_actualizar.append(nombre)
+    
+    if descripcion != "":
+        set_clause.append("descripcion = ?")
+        datos_a_actualizar.append(descripcion)
+
+    if stock != "":
+        set_clause.append("stock = ?")
+        datos_a_actualizar.append(int(stock))
+
+    if precio != "":
+        set_clause.append("precio = ?")
+        datos_a_actualizar.append(float(precio))
+
+    if categoria != "":
+        set_clause.append("categoria = ?")
+        datos_a_actualizar.append(categoria)
+    
+    # Si no hay cambios, se muestra un mensaje
+    if not set_clause:
+        print("No se realizaron cambios.")
+        return
+
+    # Agregamos el ID al final de la lista de datos
+    set_clause = ", ".join(set_clause)  # Convertir la lista de columnas a modificar en un string
+    query = f"UPDATE materiales SET {set_clause} WHERE id = ?"
+    datos_a_actualizar.append(producto_id)
+
+    # Ejecutamos la consulta de actualización
+    with sqlite3.connect(DBName) as conexion:
+        cursor = conexion.cursor()
+        cursor.execute(query, tuple(datos_a_actualizar))
+        conexion.commit()
+    
+    print(f"Producto con ID {producto_id} actualizado exitosamente.") 
     
 
-while opcion != 7:
+while opcion !=8:
     mostrar_menu() 
-    opcion = int(input("Introduzca una opcion (1-7) para continuar:"))
+    opcion = int(input("Introduzca una opcion (1-8) para continuar:"))
     if opcion == 1:
         insert_producto()
     elif opcion == 2:        
@@ -253,7 +297,9 @@ while opcion != 7:
         buscar_producto()
     elif opcion == 6:
         reporte_bajo_stock()
-    elif opcion == 7:
+    elif opcion ==7:
+        modificar_producto()
+    elif opcion == 8:
         print("---Usted a seleccionado salir del programa, Hasta luego.....")
         #break # solo si usamos un while true
     else:
