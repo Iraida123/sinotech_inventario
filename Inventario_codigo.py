@@ -173,7 +173,7 @@ def buscar_producto():
         values = (f"%{nombre}%",)
     elif opcion == "3":
         categoria = input( "Categoría del producto a buscar: ")
-        query = "SELECT * FROM productos WHERE categoria LIKE ? "
+        query = "SELECT * FROM materiales WHERE categoria LIKE ? "
         values = (f"%{categoria}%", )
 
     else:
